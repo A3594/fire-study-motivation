@@ -7,6 +7,7 @@ import { calculateStats } from '../utils/stats';
 import { getAdaptiveDailyGoals } from '../utils/mastery';
 import { ActionButton } from '../components/ActionButton';
 import { StatCard } from '../components/StatCard';
+import { StudyMusicPlayer } from '../components/StudyMusicPlayer';
 import { TaskCard } from '../components/TaskCard';
 import { WeeklyListenPanel } from '../components/WeeklyListenPanel';
 
@@ -129,6 +130,8 @@ export function TodayPage({ settings, plan, today, todayMode, todayRecord, recor
           />
         </div>
       </section>
+
+      <StudyMusicPlayer />
 
       <WeeklyListenPanel plan={plan} settings={settings} records={records} today={today} />
 
