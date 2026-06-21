@@ -9,9 +9,13 @@ type TrackKind = 'objective' | 'subjective';
 type ListenMode = 'question' | 'qa';
 
 const TTS_RATE = 0.84;
+const TTS_ANSWER_RATE = 0.76;
 const TTS_CHUNK_PAUSE_MS = 700;
+const TTS_ANSWER_CHUNK_PAUSE_MS = 900;
 const TTS_SHORT_PAUSE_MS = 500;
 const TTS_THINK_PAUSE_MS = 3500;
+const TTS_ANSWER_PRE_PAUSE_MS = 1300;
+const TTS_ANSWER_REPEAT_PAUSE_MS = 900;
 const TTS_REPEAT_PAUSE_MS = 1000;
 
 interface ListeningCard {
@@ -223,11 +227,28 @@ export function WeeklyListenPanel({ plan, settings, records, today }: WeeklyList
       if (sessionRef.current !== token) return;
       if (pauseEnabled) await wait(TTS_THINK_PAUSE_MS);
       if (sessionRef.current !== token) return;
+      await wait(TTS_ANSWER_PRE_PAUSE_MS);
+      if (sessionRef.current !== token) return;
       await speakText('정답입니다.', () => sessionRef.current === token);
+      if (sessionRef.current !== token) return;
+      const answerText = card.answer || '답안이 비어 있습니다.';
+      await wait(TTS_SHORT_PAUSE_MS);
+      if (sessionRef.current !== token) return;
+      await speakText(answerText, () => sessionRef.current === token, {
+        rate: TTS_ANSWER_RATE,
+        chunkPauseMs: TTS_ANSWER_CHUNK_PAUSE_MS,
+      });
+      if (sessionRef.current !== token) return;
+      await wait(TTS_ANSWER_REPEAT_PAUSE_MS);
+      if (sessionRef.current !== token) return;
+      await speakText('한 번 더 읽겠습니다.', () => sessionRef.current === token);
       if (sessionRef.current !== token) return;
       await wait(TTS_SHORT_PAUSE_MS);
       if (sessionRef.current !== token) return;
-      await speakText(card.answer || '답안이 비어 있습니다.', () => sessionRef.current === token);
+      await speakText(answerText, () => sessionRef.current === token, {
+        rate: TTS_ANSWER_RATE,
+        chunkPauseMs: TTS_ANSWER_CHUNK_PAUSE_MS,
+      });
       if (sessionRef.current !== token) return;
       if (card.mnemonic && card.mnemonic !== card.answer) {
         await wait(TTS_SHORT_PAUSE_MS);
@@ -403,22 +424,29 @@ function buildListeningCards(track: ListeningTrack, data: ListeningData | null):
   });
 }
 
-async function speakText(text: string, isActive: () => boolean = () => true) {
+interface SpeakOptions {
+  rate?: number;
+  chunkPauseMs?: number;
+}
+
+async function speakText(text: string, isActive: () => boolean = () => true, options: SpeakOptions = {}) {
   const chunks = buildSpeechChunks(text);
+  const rate = options.rate ?? TTS_RATE;
+  const chunkPauseMs = options.chunkPauseMs ?? TTS_CHUNK_PAUSE_MS;
 
   for (let index = 0; index < chunks.length; index += 1) {
     if (!isActive()) return;
-    await speakUtterance(chunks[index]);
+    await speakUtterance(chunks[index], rate);
     if (!isActive()) return;
-    if (index < chunks.length - 1) await wait(TTS_CHUNK_PAUSE_MS);
+    if (index < chunks.length - 1) await wait(chunkPauseMs);
   }
 }
 
-function speakUtterance(text: string) {
+function speakUtterance(text: string, rate = TTS_RATE) {
   return new Promise<void>((resolve) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ko-KR';
-    utterance.rate = TTS_RATE;
+    utterance.rate = rate;
     utterance.pitch = 1;
     utterance.onend = () => resolve();
     utterance.onerror = () => resolve();
