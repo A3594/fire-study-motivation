@@ -16,6 +16,7 @@ export function TaskCard({ task, onChange, onDelete }: TaskCardProps) {
   const rate = getTaskRate(task);
   const status = getTaskStatus(task);
   const ankiScopeLabel = task.ankiScope?.replace(/\s*#card\b/g, '');
+  const pdfUrl = resolvePdfUrl(task.pdfUrl);
 
   function changeActual(delta: number) {
     const actualCount = Math.max(0, task.actualCount + delta);
@@ -60,8 +61,8 @@ export function TaskCard({ task, onChange, onDelete }: TaskCardProps) {
         <div className="source-box">
           {task.sourceLabel ? <strong>{task.sourceLabel}</strong> : null}
           {task.logseqFile ? <span>Logseq: {task.logseqFile}</span> : null}
-          {task.pdfUrl ? (
-            <a href={task.pdfUrl} target="_blank" rel="noreferrer">
+          {pdfUrl ? (
+            <a href={pdfUrl} target="_blank" rel="noreferrer">
               <ExternalLink size={14} />
               같은 학습 범위 PDF 열기
             </a>
@@ -72,7 +73,7 @@ export function TaskCard({ task, onChange, onDelete }: TaskCardProps) {
               오늘 {task.plannedStartCard}-{task.plannedEndCard}/{task.plannedTotalCards}장 · {task.plannedDocumentDays}일 중 {task.plannedDayInDocument}일
             </em>
           ) : null}
-          {task.pdfUrl && ankiScopeLabel ? <em>PDF로 페이지 구조 확인 → ANKI에서 같은 범위 랜덤 회상</em> : null}
+          {pdfUrl && ankiScopeLabel ? <em>PDF로 페이지 구조 확인 → ANKI에서 같은 범위 랜덤 회상</em> : null}
         </div>
       ) : null}
 
@@ -121,4 +122,11 @@ export function TaskCard({ task, onChange, onDelete }: TaskCardProps) {
       </ActionButton>
     </article>
   );
+}
+
+function resolvePdfUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  const match = url.match(/\/api\/pages\/([^/]+)\/pdf$/);
+  if (!match) return url;
+  return `./pdfs/pages/${decodeURIComponent(match[1])}.pdf`;
 }

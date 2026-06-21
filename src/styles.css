@@ -700,6 +700,42 @@ textarea {
   color: #1d4ed8;
 }
 
+.pdf-link-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.pdf-link {
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dbe2ec;
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px 12px;
+  color: #111827;
+  text-decoration: none;
+}
+
+.pdf-link span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.pdf-link strong {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
 .memory-grid {
   display: grid;
   gap: 8px;

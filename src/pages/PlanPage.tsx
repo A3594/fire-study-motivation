@@ -1,7 +1,7 @@
 import { BatteryCharging, Gauge, RefreshCw, TrendingDown, TrendingUp, Zap } from 'lucide-react';
 import { PHASE_NOTES } from '../constants/defaults';
 import { MEMORY_PRINCIPLES, ROTATION_POLICY } from '../constants/memoryStrategy';
-import { getCatalogSummary } from '../constants/studyCatalog';
+import { PDF_GROUP_LINKS, getCatalogSummary } from '../constants/studyCatalog';
 import type { Plan, Settings, StudyRecord } from '../types';
 import { getDday } from '../utils/date';
 import { calculateStats } from '../utils/stats';
@@ -96,6 +96,19 @@ export function PlanPage({ plan, settings, records, onLower, onKeep, onRaise, on
             pace={formatPlanPace(subjectivePlan)}
             range={formatPlanRange(subjectivePlan)}
           />
+        </div>
+      </section>
+
+      <section className="form-card compact">
+        <h2>PDF 자료실</h2>
+        <p className="helper-copy">휴대폰에서도 바로 열 수 있도록 GitHub에 저장된 과목별 PDF입니다.</p>
+        <div className="pdf-link-grid">
+          {PDF_GROUP_LINKS.map((item) => (
+            <a key={item.url} className="pdf-link" href={item.url} target="_blank" rel="noreferrer">
+              <span>{item.group}</span>
+              <strong>{item.label}</strong>
+            </a>
+          ))}
         </div>
       </section>
 

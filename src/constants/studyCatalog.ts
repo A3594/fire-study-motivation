@@ -69,7 +69,7 @@ function doc(
     examType,
     track,
     logseqFile,
-    pdfUrl: `http://127.0.0.1:3217/api/pages/${encodeURIComponent(id)}/pdf`,
+    pdfUrl: `./pdfs/pages/${encodeURIComponent(id)}.pdf`,
     priority,
     ankiScope: `${group} / ${title}`,
     cardCount: CARD_COUNTS[id] ?? 0,
@@ -99,6 +99,18 @@ export function writeCardCountOverrides(counts: Record<string, number>) {
     // Ignore unavailable browser storage.
   }
 }
+
+export const PDF_GROUP_LINKS = [
+  { label: '2차 전체', group: '2차', url: './pdfs/groups/secondary-all.pdf' },
+  { label: '화재안전기술기준', group: '2차', url: './pdfs/groups/secondary-fire-standards.pdf' },
+  { label: '소방법 주관식', group: '2차', url: './pdfs/groups/secondary-law.pdf' },
+  { label: '점검실무', group: '2차', url: './pdfs/groups/secondary-inspection.pdf' },
+  { label: '객관식 전체', group: '1차', url: './pdfs/groups/objective-all.pdf' },
+  { label: '소방관계법령', group: '1차', url: './pdfs/groups/objective-law.pdf' },
+  { label: '소방원론', group: '1차', url: './pdfs/groups/objective-theory.pdf' },
+  { label: '소방전기', group: '1차', url: './pdfs/groups/objective-electric.pdf' },
+  { label: '구조원리(소방전기)', group: '1차', url: './pdfs/groups/objective-structure-electric.pdf' },
+] as const;
 
 export const SECONDARY_FIRE_DOCS: StudyDocument[] = [
   doc('nftc101', '소화기구 및 자동소화장치(NFTC101)', '2차 화재안전기술기준', 'subjective', 'secondary-fire', 'PARA___Resource___화재안전기술기준___소화기구 및 자동소화장치(NFTC101).md', '높음'),
