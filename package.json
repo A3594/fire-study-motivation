@@ -1,11 +1,12 @@
 {
   "name": "fire-study-motivation",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 3227",
     "build:listening": "node scripts/build-listening-cards.mjs",
+    "build:week-audio": "node scripts/build-week-audio.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 3228"
   },

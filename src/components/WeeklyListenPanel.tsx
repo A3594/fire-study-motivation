@@ -31,6 +31,24 @@ interface ListeningData {
   documents: ListeningDocument[];
 }
 
+interface WeekAudioTrack {
+  kind: TrackKind;
+  label: string;
+  title: string;
+  url: string;
+  cardCount: number;
+  documentCount: number;
+  bytes: number;
+  estimatedSeconds?: number;
+}
+
+interface WeekAudioManifest {
+  generatedAt: string;
+  weekStartDate: string;
+  weekEndDate: string;
+  tracks: WeekAudioTrack[];
+}
+
 interface ListeningSegment {
   documentId: string;
   title: string;
@@ -66,6 +84,7 @@ export function WeeklyListenPanel({ plan, settings, records, today }: WeeklyList
   const [repeatEnabled, setRepeatEnabled] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [mode, setMode] = useState<ListenMode>('qa');
+  const [audioManifest, setAudioManifest] = useState<WeekAudioManifest | null>(null);
   const sessionRef = useRef(0);
   const repeatRef = useRef(repeatEnabled);
   const cardsRef = useRef<ListeningCardView[]>([]);
@@ -93,6 +112,26 @@ export function WeeklyListenPanel({ plan, settings, records, today }: WeeklyList
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    fetch('./audio/current-week/manifest.json', { cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) return null;
+        return response.json() as Promise<WeekAudioManifest>;
+      })
+      .then((manifest) => {
+        if (!cancelled && manifest) setAudioManifest(manifest);
+      })
+      .catch(() => {
+        if (!cancelled) setAudioManifest(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     repeatRef.current = repeatEnabled;
   }, [repeatEnabled]);
 
@@ -108,6 +147,7 @@ export function WeeklyListenPanel({ plan, settings, records, today }: WeeklyList
   const activeTrack = tracks.find((track) => track.kind === trackKind) ?? tracks[0];
   const cards = useMemo(() => buildListeningCards(activeTrack, data), [activeTrack, data]);
   const activeCard = cards[cardIndex] ?? cards[0];
+  const activeAudioTrack = audioManifest?.tracks.find((track) => track.kind === trackKind);
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
   useEffect(() => {
@@ -257,8 +297,23 @@ export function WeeklyListenPanel({ plan, settings, records, today }: WeeklyList
         </button>
       </div>
 
+      {activeAudioTrack ? (
+        <div className="background-audio-box">
+          <div>
+            <span>백그라운드 오디오</span>
+            <strong>{activeAudioTrack.title}</strong>
+            <small>
+              {activeAudioTrack.cardCount}카드 · 약 {formatAudioDuration(activeAudioTrack.estimatedSeconds ?? 0)} · {formatBytes(activeAudioTrack.bytes)}
+            </small>
+          </div>
+          <audio controls preload="none" src={activeAudioTrack.url}>
+            오디오 재생을 지원하지 않는 브라우저입니다.
+          </audio>
+        </div>
+      ) : null}
+
       {!supported ? <p className="listen-help">이 브라우저는 기본 TTS를 지원하지 않습니다. Chrome 또는 Safari에서 열어주세요.</p> : null}
-      {supported ? <p className="listen-help">화면을 켠 상태에서 이어폰으로 듣는 용도입니다. 백그라운드 재생은 기기 정책에 따라 멈출 수 있습니다.</p> : null}
+      {supported ? <p className="listen-help">버튼형 듣기는 한 카드씩 확인할 때 쓰고, 화면을 끄고 들을 때는 백그라운드 오디오를 사용하세요.</p> : null}
     </section>
   );
 }
@@ -342,4 +397,17 @@ function speakText(text: string) {
 
 function wait(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function formatAudioDuration(seconds: number) {
+  if (!seconds) return '계산 중';
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return `${minutes}분 ${rest}초`;
+}
+
+function formatBytes(bytes: number) {
+  if (!bytes) return '0KB';
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
 }

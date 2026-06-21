@@ -556,6 +556,36 @@ textarea {
   gap: 8px;
 }
 
+.background-audio-box {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  background: #f0fdf4;
+  padding: 12px;
+}
+
+.background-audio-box span,
+.background-audio-box small {
+  display: block;
+  color: #166534;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.background-audio-box strong {
+  display: block;
+  margin: 4px 0;
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.background-audio-box audio {
+  width: 100%;
+}
+
 .listen-help {
   margin-top: 10px;
   color: #64748b;

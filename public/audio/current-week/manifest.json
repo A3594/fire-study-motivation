@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-06-21T07:06:44.041Z",
+  "source": "Logseq #card bundled listening-cards.json",
+  "planStartDate": "2026-06-21",
+  "weekStartDate": "2026-06-21",
+  "weekEndDate": "2026-06-27",
+  "objectiveGoal": 5,
+  "subjectiveGoal": 2,
+  "tracks": [
+    {
+      "kind": "objective",
+      "label": "1차 객관식",
+      "title": "1차 객관식 이번 주 듣기",
+      "url": "./audio/current-week/objective-week.wav",
+      "cardCount": 35,
+      "documentCount": 1,
+      "rangeSummary": [
+        {
+          "documentId": "obj-law-basic",
+          "title": "소방기본법",
+          "ranges": [
+            {
+              "start": 1,
+              "end": 35
+            }
+          ]
+        }
+      ],
+      "bytes": 81132206,
+      "estimatedSeconds": 2535
+    },
+    {
+      "kind": "subjective",
+      "label": "2차 주관식",
+      "title": "2차 주관식 이번 주 듣기",
+      "url": "./audio/current-week/subjective-week.wav",
+      "cardCount": 14,
+      "documentCount": 1,
+      "rangeSummary": [
+        {
+          "documentId": "nftc101",
+          "title": "소화기구 및 자동소화장치(NFTC101)",
+          "ranges": [
+            {
+              "start": 1,
+              "end": 14
+            }
+          ]
+        }
+      ],
+      "bytes": 19881166,
+      "estimatedSeconds": 621
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fire-study-motivation-pwa-v4';
+const CACHE_NAME = 'fire-study-motivation-pwa-v5';
 const APP_SHELL = [
   './manifest.webmanifest',
   './icons/icon.svg',
@@ -36,6 +36,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.includes('/pdfs/')) return;
+  if (url.pathname.includes('/audio/')) return;
 
   if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(networkFirst(request));
