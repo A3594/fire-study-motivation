@@ -1,6 +1,5 @@
-const CACHE_NAME = 'fire-study-motivation-pwa-v1';
+const CACHE_NAME = 'fire-study-motivation-pwa-v2';
 const APP_SHELL = [
-  './',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/icon-192.png',
@@ -24,22 +23,48 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.includes('/pdfs/')) return;
+
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(networkFirst(request));
+    return;
+  }
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (!response || response.status !== 200) return response;
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        return response;
-      });
-    })
+    caches.match(request).then((cached) => cached || fetchAndCache(request))
   );
 });
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request, { cache: 'no-store' });
+    if (response && response.status === 200) {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    return cached || caches.match('./');
+  }
+}
+
+async function fetchAndCache(request) {
+  const response = await fetch(request);
+  if (!response || response.status !== 200) return response;
+  const copy = response.clone();
+  caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+  return response;
+}

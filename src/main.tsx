@@ -10,9 +10,24 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 
 if ('serviceWorker' in navigator) {
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(() => {
-      // The app still works in a browser when service workers are unavailable.
-    });
+    navigator.serviceWorker
+      .register('./service-worker.js', { updateViaCache: 'none' })
+      .then((registration) => {
+        registration.update();
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+      })
+      .catch(() => {
+        // The app still works in a browser when service workers are unavailable.
+      });
   });
 }
