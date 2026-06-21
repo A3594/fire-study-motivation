@@ -203,16 +203,16 @@ export function WeeklyListenPanel({ plan, settings, records, today }: WeeklyList
     setCardIndex(safeIndex);
     indexRef.current = safeIndex;
 
-    await speakText(`문제 ${safeIndex + 1}. ${card.question}`);
+    await speakText(`문제 ${safeIndex + 1}. ${card.question}`, () => sessionRef.current === token);
     if (sessionRef.current !== token) return;
 
     if (nextMode === 'qa') {
       if (pauseEnabled) await wait(3000);
       if (sessionRef.current !== token) return;
-      await speakText(`답. ${card.answer || '답안이 비어 있습니다.'}`);
+      await speakText(`답. ${card.answer || '답안이 비어 있습니다.'}`, () => sessionRef.current === token);
       if (sessionRef.current !== token) return;
       if (card.mnemonic && card.mnemonic !== card.answer) {
-        await speakText(`핵심. ${card.mnemonic}`);
+        await speakText(`핵심. ${card.mnemonic}`, () => sessionRef.current === token);
       }
     }
 
@@ -383,16 +383,80 @@ function buildListeningCards(track: ListeningTrack, data: ListeningData | null):
   });
 }
 
-function speakText(text: string) {
+async function speakText(text: string, isActive: () => boolean = () => true) {
+  const chunks = buildSpeechChunks(text);
+
+  for (let index = 0; index < chunks.length; index += 1) {
+    if (!isActive()) return;
+    await speakUtterance(chunks[index]);
+    if (!isActive()) return;
+    if (index < chunks.length - 1) await wait(450);
+  }
+}
+
+function speakUtterance(text: string) {
   return new Promise<void>((resolve) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ko-KR';
-    utterance.rate = 0.92;
+    utterance.rate = 0.9;
     utterance.pitch = 1;
     utterance.onend = () => resolve();
     utterance.onerror = () => resolve();
     window.speechSynthesis.speak(utterance);
   });
+}
+
+function buildSpeechChunks(text: string): string[] {
+  const marker = '[[tts-break]]';
+  const spaced = text
+    .replace(/\s+/g, ' ')
+    .replace(/([①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳])/g, ` ${marker} $1`)
+    .replace(/(\s)(\(?\d{1,2}\)?[.)]\s+)/g, `$1${marker} $2`)
+    .replace(/(\s)([가-하][.)]\s+)/g, `$1${marker} $2`)
+    .replace(/(\s)(제\s*\d+\s*호)/g, `$1${marker} $2`)
+    .replace(/(\s)(다만,|단,|그리고|또는|또한)\s/g, `$1${marker} $2 `)
+    .replace(new RegExp(`(?:\\s*${escapeRegExp(marker)}\\s*)+`, 'g'), ` ${marker} `)
+    .trim();
+
+  return spaced
+    .split(marker)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .flatMap(splitLongSpeechChunk);
+}
+
+function splitLongSpeechChunk(text: string): string[] {
+  const maxLength = 230;
+  if (text.length <= maxLength) return [text];
+
+  const sentences = text
+    .replace(/([.!?。]|다\.|요\.)\s+/g, '$1[[sentence-break]]')
+    .split('[[sentence-break]]')
+    .filter(Boolean);
+  const chunks: string[] = [];
+  let current = '';
+
+  sentences.forEach((sentence) => {
+    if (!current) {
+      current = sentence;
+      return;
+    }
+
+    if (`${current} ${sentence}`.length <= maxLength) {
+      current = `${current} ${sentence}`;
+      return;
+    }
+
+    chunks.push(current);
+    current = sentence;
+  });
+
+  if (current) chunks.push(current);
+  return chunks.length ? chunks : [text];
+}
+
+function escapeRegExp(text: string) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function wait(ms: number) {
