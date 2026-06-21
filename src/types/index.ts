@@ -50,12 +50,14 @@ export interface DailyTask {
   logseqFile?: string;
   pdfUrl?: string;
   ankiScope?: string;
+  plannedDocumentId?: string;
   plannedStartCard?: number;
   plannedEndCard?: number;
   plannedTotalCards?: number;
   plannedDayInDocument?: number;
   plannedDocumentDays?: number;
   plannedDailyGoal?: number;
+  plannedCardKeys?: string[];
   taskType: TaskType;
   targetCount: number;
   actualCount: number;

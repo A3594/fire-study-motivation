@@ -1,4 +1,4 @@
-import { OBJECTIVE_DOCS, SUBJECTIVE_DOCS, getStudyDocumentCardCount } from '../constants/studyCatalog';
+import { getObjectiveDocs, getSubjectiveDocs, getStudyDocumentCardCount } from '../constants/studyCatalog';
 import type { DailyTask, Plan, Settings, StudyRecord } from '../types';
 import { daysBetween, getDday, toDateKey } from './date';
 
@@ -120,7 +120,7 @@ function buildTrackProgress(
 }
 
 function sumTotalCards(examType: 'objective' | 'subjective'): number {
-  const documents = examType === 'objective' ? OBJECTIVE_DOCS : SUBJECTIVE_DOCS;
+  const documents = examType === 'objective' ? getObjectiveDocs() : getSubjectiveDocs();
   return documents.reduce((sum, document) => sum + getStudyDocumentCardCount(document), 0);
 }
 
@@ -131,19 +131,26 @@ function countCompletedUnits(records: StudyRecord[], examType: 'objective' | 'su
 }
 
 function countFirstPassCards(records: StudyRecord[], examType: 'objective' | 'subjective'): number {
-  const covered = new Map<string, Set<number>>();
+  const covered = new Map<string, Set<string>>();
   records.flatMap((record) => record.dailyTasks)
     .filter((task) => isPlannedTrackTask(task, examType))
     .forEach((task) => {
       const count = getCompletedCount(task);
       if (count <= 0) return;
+      if (task.plannedCardKeys?.length) {
+        const key = task.plannedDocumentId || task.logseqFile || task.subject;
+        if (!covered.has(key)) covered.set(key, new Set<string>());
+        const set = covered.get(key);
+        task.plannedCardKeys.slice(0, count).forEach((cardKey) => set?.add(cardKey));
+        return;
+      }
       const key = task.logseqFile || task.subject;
       const start = task.plannedStartCard ?? 1;
       const end = Math.min(task.plannedEndCard ?? start + count - 1, start + count - 1);
-      if (!covered.has(key)) covered.set(key, new Set<number>());
+      if (!covered.has(key)) covered.set(key, new Set<string>());
       const set = covered.get(key);
       if (!set) return;
-      for (let card = start; card <= end; card += 1) set.add(card);
+      for (let card = start; card <= end; card += 1) set.add(`${key}:${card}`);
     });
   return [...covered.values()].reduce((sum, set) => sum + set.size, 0);
 }

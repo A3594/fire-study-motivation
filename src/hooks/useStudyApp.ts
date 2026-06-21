@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_SETTINGS, normalizeSettings } from '../constants/defaults';
-import { writeCardCountOverrides } from '../constants/studyCatalog';
+import { writeCardCountOverrides, writeDynamicCatalogFromListeningCards } from '../constants/studyCatalog';
 import { storage } from '../storage/localStorage';
 import type { Condition, CoreCheckKey, DailyTask, Plan, Settings, StudyRecord, TabKey } from '../types';
 import { toDateKey } from '../utils/date';
@@ -26,7 +26,20 @@ export function useStudyApp() {
   useEffect(() => {
     let cancelled = false;
 
-    async function syncCardCounts() {
+    async function syncBundledCatalog() {
+      try {
+        const response = await fetch('./listening-cards.json', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json() as { documents?: Parameters<typeof writeDynamicCatalogFromListeningCards>[0] };
+        if (!data.documents?.length || cancelled) return;
+        writeDynamicCatalogFromListeningCards(data.documents);
+        setCatalogSyncTick((value) => value + 1);
+      } catch {
+        // Keep bundled static catalog when the JSON is unavailable.
+      }
+    }
+
+    async function syncLocalPdfServerCounts() {
       try {
         const response = await fetch('http://127.0.0.1:3217/api/pages');
         if (!response.ok) return;
@@ -45,7 +58,8 @@ export function useStudyApp() {
       }
     }
 
-    syncCardCounts();
+    syncBundledCatalog();
+    syncLocalPdfServerCounts();
     return () => {
       cancelled = true;
     };

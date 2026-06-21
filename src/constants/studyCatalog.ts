@@ -1,6 +1,8 @@
 import type { StudyDocument } from '../types';
 
 const CARD_COUNT_STORAGE_KEY = 'fire-study-motivation:cardCounts';
+const DYNAMIC_DOCUMENTS_STORAGE_KEY = 'fire-study-motivation:dynamicDocuments';
+const CARD_KEYS_STORAGE_KEY = 'fire-study-motivation:cardKeysByDocument';
 
 const CARD_COUNTS: Record<string, number> = {
   nftc101: 35,
@@ -81,6 +83,10 @@ export function getStudyDocumentCardCount(document: StudyDocument): number {
   return Math.max(0, overrides[document.id] ?? document.cardCount ?? 0);
 }
 
+export function getStudyDocumentCardKeys(document: StudyDocument): string[] {
+  return readCardKeysByDocument()[document.id] ?? [];
+}
+
 export function readCardCountOverrides(): Record<string, number> {
   try {
     if (typeof localStorage === 'undefined') return {};
@@ -97,6 +103,55 @@ export function writeCardCountOverrides(counts: Record<string, number>) {
     localStorage.setItem(CARD_COUNT_STORAGE_KEY, JSON.stringify(counts));
   } catch {
     // Ignore unavailable browser storage.
+  }
+}
+
+export interface ListeningCatalogDocument {
+  id: string;
+  title: string;
+  group: string;
+  cardCount?: number;
+  cards?: Array<{ number?: number; question?: string }>;
+}
+
+export function writeDynamicCatalogFromListeningCards(documents: ListeningCatalogDocument[]) {
+  const dynamicDocuments = documents.map(toDynamicStudyDocument).filter((document): document is StudyDocument => Boolean(document));
+  const counts: Record<string, number> = {};
+  const cardKeys: Record<string, string[]> = {};
+
+  documents.forEach((document) => {
+    if (!document.id) return;
+    counts[document.id] = Number(document.cardCount ?? document.cards?.length ?? 0);
+    cardKeys[document.id] = (document.cards ?? []).map((card, index) => buildCardKey(document.id, card.question ?? '', card.number ?? index + 1));
+  });
+
+  try {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.setItem(DYNAMIC_DOCUMENTS_STORAGE_KEY, JSON.stringify(dynamicDocuments));
+    localStorage.setItem(CARD_COUNT_STORAGE_KEY, JSON.stringify(counts));
+    localStorage.setItem(CARD_KEYS_STORAGE_KEY, JSON.stringify(cardKeys));
+  } catch {
+    // Ignore unavailable browser storage.
+  }
+}
+
+function readDynamicDocuments(): StudyDocument[] {
+  try {
+    if (typeof localStorage === 'undefined') return [];
+    const raw = localStorage.getItem(DYNAMIC_DOCUMENTS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) as StudyDocument[] : [];
+  } catch {
+    return [];
+  }
+}
+
+function readCardKeysByDocument(): Record<string, string[]> {
+  try {
+    if (typeof localStorage === 'undefined') return {};
+    const raw = localStorage.getItem(CARD_KEYS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) as Record<string, string[]> : {};
+  } catch {
+    return {};
   }
 }
 
@@ -208,4 +263,132 @@ export function getCatalogSummary() {
 
 function sumCards(documents: StudyDocument[]): number {
   return documents.reduce((sum, document) => sum + getStudyDocumentCardCount(document), 0);
+}
+
+export function getObjectiveLawDocs(): StudyDocument[] {
+  return mergeDynamicDocuments(OBJECTIVE_LAW_DOCS, 'objective-law');
+}
+
+export function getObjectiveTheoryDocs(): StudyDocument[] {
+  return mergeDynamicDocuments(OBJECTIVE_THEORY_DOCS, 'objective-theory');
+}
+
+export function getObjectiveElectricDocs(): StudyDocument[] {
+  return mergeDynamicDocuments(OBJECTIVE_ELECTRIC_DOCS, 'objective-electric');
+}
+
+export function getObjectiveStructureDocs(): StudyDocument[] {
+  return mergeDynamicDocuments(OBJECTIVE_STRUCTURE_DOCS, 'objective-structure');
+}
+
+export function getSecondaryFireDocs(): StudyDocument[] {
+  return mergeDynamicDocuments(SECONDARY_FIRE_DOCS, 'secondary-fire');
+}
+
+export function getSecondaryLawDocs(): StudyDocument[] {
+  return mergeDynamicDocuments(SECONDARY_LAW_DOCS, 'secondary-law');
+}
+
+export function getSecondaryInspectionDocs(): StudyDocument[] {
+  return mergeDynamicDocuments(SECONDARY_INSPECTION_DOCS, 'secondary-inspection');
+}
+
+export function getObjectiveDocs(): StudyDocument[] {
+  return [
+    ...getObjectiveLawDocs(),
+    ...getObjectiveTheoryDocs(),
+    ...getObjectiveElectricDocs(),
+    ...getObjectiveStructureDocs(),
+  ];
+}
+
+export function getSubjectiveDocs(): StudyDocument[] {
+  return [
+    ...getSecondaryFireDocs(),
+    ...getSecondaryLawDocs(),
+    ...getSecondaryInspectionDocs(),
+  ];
+}
+
+export function getDynamicCatalogSummary() {
+  const objectiveLawDocs = getObjectiveLawDocs();
+  const objectiveTheoryDocs = getObjectiveTheoryDocs();
+  const objectiveElectricDocs = getObjectiveElectricDocs();
+  const objectiveStructureDocs = getObjectiveStructureDocs();
+  const secondaryFireDocs = getSecondaryFireDocs();
+  const secondaryLawDocs = getSecondaryLawDocs();
+  const secondaryInspectionDocs = getSecondaryInspectionDocs();
+
+  return [
+    { label: '1차 객관식 소방관계법규', count: objectiveLawDocs.length, cardCount: sumCards(objectiveLawDocs) },
+    { label: '1차 객관식 소방원론', count: objectiveTheoryDocs.length, cardCount: sumCards(objectiveTheoryDocs) },
+    { label: '1차 객관식 소방전기', count: objectiveElectricDocs.length, cardCount: sumCards(objectiveElectricDocs) },
+    { label: '1차 객관식 구조원리', count: objectiveStructureDocs.length, cardCount: sumCards(objectiveStructureDocs) },
+    { label: '2차 화재안전기술기준', count: secondaryFireDocs.length, cardCount: sumCards(secondaryFireDocs) },
+    { label: '2차 소방법 주관식', count: secondaryLawDocs.length, cardCount: sumCards(secondaryLawDocs) },
+    { label: '2차 점검실무', count: secondaryInspectionDocs.length, cardCount: sumCards(secondaryInspectionDocs) },
+  ];
+}
+
+function mergeDynamicDocuments(baseDocuments: StudyDocument[], track: StudyDocument['track']): StudyDocument[] {
+  const baseIds = new Set(baseDocuments.map((document) => document.id));
+  const extras = readDynamicDocuments()
+    .filter((document) => document.track === track && !baseIds.has(document.id))
+    .sort((a, b) => `${a.group} ${a.title}`.localeCompare(`${b.group} ${b.title}`, 'ko'));
+  return [...baseDocuments, ...extras];
+}
+
+function toDynamicStudyDocument(document: ListeningCatalogDocument): StudyDocument | null {
+  if (!document.id || !document.title || !document.group) return null;
+  const inferred = inferTrack(document.group, document.title);
+  if (!inferred) return null;
+
+  return {
+    id: document.id,
+    title: document.title,
+    group: document.group,
+    examType: inferred.examType,
+    track: inferred.track,
+    logseqFile: `${document.id}.md`,
+    pdfUrl: `./pdfs/pages/${encodeURIComponent(document.id)}.pdf`,
+    ankiScope: `${document.group} / ${document.title}`,
+    cardCount: Number(document.cardCount ?? document.cards?.length ?? 0),
+    priority: '보통',
+  };
+}
+
+function inferTrack(group: string, title: string): Pick<StudyDocument, 'examType' | 'track'> | null {
+  const text = `${group} ${title}`;
+  if (/객관식/.test(text)) {
+    if (/관계법|법규|법령|건축법|다중|초고층/.test(text)) return { examType: 'objective', track: 'objective-law' };
+    if (/원론|연소|화재|폭발/.test(text)) return { examType: 'objective', track: 'objective-theory' };
+    if (/전기|회로|자기|교류|직류|시퀀스/.test(text)) return { examType: 'objective', track: 'objective-electric' };
+    return { examType: 'objective', track: 'objective-structure' };
+  }
+  if (/점검|실무|행정|종합|작동|승인|제품검사|도시기호|표시기호/.test(text)) {
+    return { examType: 'subjective', track: 'secondary-inspection' };
+  }
+  if (/법규|소방법|기본법|예방법|시설법|다중|초고층/.test(text)) {
+    return { examType: 'subjective', track: 'secondary-law' };
+  }
+  return { examType: 'subjective', track: 'secondary-fire' };
+}
+
+function buildCardKey(documentId: string, question: string, fallbackNumber: number): string {
+  const normalized = question
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .slice(0, 220);
+  const source = normalized || `card-${fallbackNumber}`;
+  return `${documentId}:${hashString(source)}`;
+}
+
+function hashString(text: string): string {
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
 }

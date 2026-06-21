@@ -1,7 +1,7 @@
 import { BatteryCharging, Gauge, RefreshCw, TrendingDown, TrendingUp, Zap } from 'lucide-react';
 import { PHASE_NOTES } from '../constants/defaults';
 import { MEMORY_PRINCIPLES, ROTATION_POLICY } from '../constants/memoryStrategy';
-import { PDF_GROUP_LINKS, getCatalogSummary } from '../constants/studyCatalog';
+import { PDF_GROUP_LINKS, getDynamicCatalogSummary } from '../constants/studyCatalog';
 import type { Plan, Settings, StudyRecord } from '../types';
 import { getDday } from '../utils/date';
 import { calculateStats } from '../utils/stats';
@@ -24,7 +24,7 @@ interface PlanPageProps {
 
 export function PlanPage({ plan, settings, records, onLower, onKeep, onRaise, onHard, onEase, onRegenerate }: PlanPageProps) {
   const stats = calculateStats(records, plan, settings);
-  const catalogSummary = getCatalogSummary();
+  const catalogSummary = getDynamicCatalogSummary();
   const firstDday = getDday(plan.firstExamDate);
   const secondDday = getDday(plan.secondExamDate);
   const mastery = calculateMasteryProgress(plan, records);

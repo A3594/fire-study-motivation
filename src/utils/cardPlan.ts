@@ -1,4 +1,4 @@
-import { OBJECTIVE_DOCS, SUBJECTIVE_DOCS, getStudyDocumentCardCount } from '../constants/studyCatalog';
+import { getObjectiveDocs, getSubjectiveDocs, getStudyDocumentCardCount } from '../constants/studyCatalog';
 import type { Plan, StudyDocument } from '../types';
 import { daysBetween, toDateKey } from './date';
 
@@ -23,11 +23,11 @@ export function getSubjectiveDailyGoal(plan: Plan): number {
 }
 
 export function getObjectiveCardPlan(plan: Plan, date = toDateKey(), dailyGoal = getObjectiveDailyGoal(plan)): DocumentCardPlan {
-  return selectDocumentCardPlan(OBJECTIVE_DOCS, daysBetween(plan.startDate, date), dailyGoal);
+  return selectDocumentCardPlan(getObjectiveDocs(), daysBetween(plan.startDate, date), dailyGoal);
 }
 
 export function getSubjectiveCardPlan(plan: Plan, date = toDateKey(), dailyGoal = getSubjectiveDailyGoal(plan)): DocumentCardPlan {
-  return selectDocumentCardPlan(SUBJECTIVE_DOCS, daysBetween(plan.startDate, date), dailyGoal);
+  return selectDocumentCardPlan(getSubjectiveDocs(), daysBetween(plan.startDate, date), dailyGoal);
 }
 
 export function selectDocumentCardPlan(documents: StudyDocument[], planDay: number, dailyGoal: number): DocumentCardPlan {

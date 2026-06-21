@@ -1,13 +1,14 @@
 import {
-  OBJECTIVE_DOCS,
-  OBJECTIVE_ELECTRIC_DOCS,
-  OBJECTIVE_LAW_DOCS,
-  OBJECTIVE_STRUCTURE_DOCS,
-  OBJECTIVE_THEORY_DOCS,
-  SECONDARY_FIRE_DOCS,
-  SECONDARY_INSPECTION_DOCS,
-  SECONDARY_LAW_DOCS,
-  SUBJECTIVE_DOCS,
+  getObjectiveDocs,
+  getObjectiveElectricDocs,
+  getObjectiveLawDocs,
+  getObjectiveStructureDocs,
+  getObjectiveTheoryDocs,
+  getSecondaryFireDocs,
+  getSecondaryInspectionDocs,
+  getSecondaryLawDocs,
+  getStudyDocumentCardKeys,
+  getSubjectiveDocs,
 } from '../constants/studyCatalog';
 import type {
   Condition,
@@ -24,7 +25,7 @@ import type {
   TaskType,
   TodayMode,
 } from '../types';
-import { daysBetween, getDayOfWeek, nowIso, toDateKey } from './date';
+import { addDays, daysBetween, getDayOfWeek, nowIso, toDateKey } from './date';
 import { DocumentCardPlan, formatPlanPace, formatPlanRange, getObjectiveCardPlan, getObjectiveDailyGoal, getSubjectiveCardPlan, getSubjectiveDailyGoal, selectDocumentCardPlan } from './cardPlan';
 import { createId } from './id';
 import { getAdaptiveDailyGoals } from './mastery';
@@ -38,12 +39,14 @@ interface TaskInput {
   logseqFile?: string;
   pdfUrl?: string;
   ankiScope?: string;
+  plannedDocumentId?: string;
   plannedStartCard?: number;
   plannedEndCard?: number;
   plannedTotalCards?: number;
   plannedDayInDocument?: number;
   plannedDocumentDays?: number;
   plannedDailyGoal?: number;
+  plannedCardKeys?: string[];
   taskType: TaskType;
   targetCount: number;
   unit: StudyUnit;
@@ -64,12 +67,14 @@ export function createTask(date: string, input?: Partial<TaskInput>): DailyTask 
     logseqFile: input?.logseqFile,
     pdfUrl: input?.pdfUrl,
     ankiScope: input?.ankiScope,
+    plannedDocumentId: input?.plannedDocumentId,
     plannedStartCard: input?.plannedStartCard,
     plannedEndCard: input?.plannedEndCard,
     plannedTotalCards: input?.plannedTotalCards,
     plannedDayInDocument: input?.plannedDayInDocument,
     plannedDocumentDays: input?.plannedDocumentDays,
     plannedDailyGoal: input?.plannedDailyGoal,
+    plannedCardKeys: input?.plannedCardKeys,
     taskType: input?.taskType ?? 'OBJECTIVE_STUDY',
     targetCount,
     actualCount: 0,
@@ -114,7 +119,7 @@ export function generateTodayTasks(plan: Plan, settings: Settings, records: Stud
     tasks.push(plannedCardTask(date, subjectivePlan, '2차 신규 ANKI 카드', 'SUBJECTIVE_KEYWORD', '보통'));
     addPageCheckTask(tasks, date, 'objective');
     addPageCheckTask(tasks, date, 'subjective');
-    addSpacedRecallTask(tasks, date, planDay);
+    addSpacedRecallTask(tasks, date, planDay, records);
     addBedtimeTask(tasks, date, settings);
     return tasks;
   }
@@ -147,7 +152,7 @@ export function generateTodayTasks(plan: Plan, settings: Settings, records: Stud
     }));
     addPageCheckTask(tasks, date, 'objective');
     addPageCheckTask(tasks, date, 'subjective');
-    addSpacedRecallTask(tasks, date, planDay);
+    addSpacedRecallTask(tasks, date, planDay, records);
     addBedtimeTask(tasks, date, settings);
     return tasks;
   }
@@ -155,9 +160,9 @@ export function generateTodayTasks(plan: Plan, settings: Settings, records: Stud
   const objectiveGoal = adaptiveGoals.objectiveGoal;
   const subjectiveGoal = adaptiveGoals.subjectiveGoal;
   const primaryObjective = objectivePlan.document;
-  const secondaryObjective = selectDocumentCardPlan(OBJECTIVE_DOCS, planDay + objectivePlan.totalDocumentDays, objectiveGoal).document;
+  const secondaryObjective = selectDocumentCardPlan(getObjectiveDocs(), planDay + objectivePlan.totalDocumentDays, objectiveGoal).document;
   const primarySubjective = subjectivePlan.document;
-  const secondarySubjective = selectDocumentCardPlan(SUBJECTIVE_DOCS, planDay + subjectivePlan.totalDocumentDays, subjectiveGoal).document;
+  const secondarySubjective = selectDocumentCardPlan(getSubjectiveDocs(), planDay + subjectivePlan.totalDocumentDays, subjectiveGoal).document;
 
   if (plan.currentPhase === '재시작 단계') {
     tasks.push(plannedCardTask(date, objectivePlan, '1차 신규 ANKI 카드', 'OBJECTIVE_STUDY', '높음'));
@@ -195,7 +200,7 @@ export function generateTodayTasks(plan: Plan, settings: Settings, records: Stud
 
   addPageCheckTask(tasks, date, 'objective');
   addPageCheckTask(tasks, date, 'subjective');
-  addSpacedRecallTask(tasks, date, planDay);
+  addSpacedRecallTask(tasks, date, planDay, records);
   addBedtimeTask(tasks, date, settings);
   return tasks;
 }
@@ -441,6 +446,7 @@ function plannedCardTask(
   isOptional = false,
 ): DailyTask {
   const document = cardPlan.document;
+  const plannedCardKeys = getStudyDocumentCardKeys(document).slice(cardPlan.startCard - 1, cardPlan.endCard);
   return createTask(date, {
     title,
     examType: document.examType,
@@ -449,12 +455,14 @@ function plannedCardTask(
     logseqFile: document.logseqFile,
     pdfUrl: document.pdfUrl,
     ankiScope: `${document.ankiScope} · ${formatPlanRange(cardPlan)}`,
+    plannedDocumentId: document.id,
     plannedStartCard: cardPlan.startCard,
     plannedEndCard: cardPlan.endCard,
     plannedTotalCards: cardPlan.totalCards,
     plannedDayInDocument: cardPlan.dayInDocument,
     plannedDocumentDays: cardPlan.totalDocumentDays,
     plannedDailyGoal: cardPlan.dailyGoal,
+    plannedCardKeys: plannedCardKeys.length ? plannedCardKeys : undefined,
     taskType,
     targetCount: Math.max(1, cardPlan.endCard - cardPlan.startCard + 1),
     unit: '개',
@@ -478,8 +486,35 @@ function addBedtimeTask(tasks: DailyTask[], date: string, settings: Settings) {
   }));
 }
 
-function addSpacedRecallTask(tasks: DailyTask[], date: string, planDay: number) {
+function addSpacedRecallTask(tasks: DailyTask[], date: string, planDay: number, records: StudyRecord[]) {
   if (planDay < 1) return;
+  const source = findSpacedRecallSourceTask(records, date);
+  if (source) {
+    tasks.push(createTask(date, {
+      title: `${source.gap}일 전 범위 간격 회상`,
+      examType: 'review',
+      subject: source.task.subject,
+      sourceLabel: '실제 학습 이력 기반 간격 반복',
+      logseqFile: source.task.logseqFile,
+      pdfUrl: source.task.pdfUrl,
+      ankiScope: source.task.ankiScope,
+      plannedDocumentId: source.task.plannedDocumentId,
+      plannedStartCard: source.task.plannedStartCard,
+      plannedEndCard: source.task.plannedEndCard,
+      plannedTotalCards: source.task.plannedTotalCards,
+      plannedDayInDocument: source.task.plannedDayInDocument,
+      plannedDocumentDays: source.task.plannedDocumentDays,
+      plannedDailyGoal: source.task.plannedDailyGoal,
+      plannedCardKeys: source.task.plannedCardKeys,
+      taskType: 'SPACED_REVIEW',
+      targetCount: 1,
+      unit: '완료',
+      priority: source.gap >= 7 ? '높음' : '보통',
+      isOptional: source.gap < 3,
+    }));
+    return;
+  }
+
   const gap = planDay >= 7 ? 7 : planDay >= 3 ? 3 : 1;
   const recallIndex = Math.max(0, planDay - gap);
   const document = recallIndex % 2 === 0 ? selectObjectiveDocument(recallIndex) : selectSubjectiveDocument(recallIndex);
@@ -497,6 +532,21 @@ function addSpacedRecallTask(tasks: DailyTask[], date: string, planDay: number) 
     priority: '보통',
     isOptional: planDay < 3,
   }));
+}
+
+function findSpacedRecallSourceTask(records: StudyRecord[], date: string): { task: DailyTask; gap: number } | null {
+  for (const gap of [7, 3, 1]) {
+    const targetDate = addDays(date, -gap);
+    const record = records.find((item) => item.date === targetDate);
+    const task = record?.dailyTasks.find((item) => {
+      if (!item.plannedTotalCards) return false;
+      if (item.examType !== 'objective' && item.examType !== 'subjective') return false;
+      return getTaskRate(item) >= 100 || item.actualCount > 0;
+    });
+    if (task) return { task, gap };
+  }
+
+  return null;
 }
 
 function studyDocumentTask(
@@ -527,10 +577,10 @@ function studyDocumentTask(
 
 function selectObjectiveDocument(dayIndex: number): StudyDocument {
   const dailyTracks = [
-    OBJECTIVE_LAW_DOCS,
-    OBJECTIVE_STRUCTURE_DOCS,
-    OBJECTIVE_THEORY_DOCS,
-    OBJECTIVE_ELECTRIC_DOCS,
+    getObjectiveLawDocs(),
+    getObjectiveStructureDocs(),
+    getObjectiveTheoryDocs(),
+    getObjectiveElectricDocs(),
   ];
   const track = dailyTracks[dayIndex % dailyTracks.length];
   const round = Math.floor(dayIndex / dailyTracks.length);
@@ -539,10 +589,10 @@ function selectObjectiveDocument(dayIndex: number): StudyDocument {
 
 function selectSubjectiveDocument(dayIndex: number): StudyDocument {
   const dailyTracks = [
-    SECONDARY_FIRE_DOCS,
-    SECONDARY_LAW_DOCS,
-    SECONDARY_FIRE_DOCS,
-    SECONDARY_INSPECTION_DOCS,
+    getSecondaryFireDocs(),
+    getSecondaryLawDocs(),
+    getSecondaryFireDocs(),
+    getSecondaryInspectionDocs(),
   ];
   const track = dailyTracks[dayIndex % dailyTracks.length];
   const round = Math.floor(dayIndex / dailyTracks.length);
