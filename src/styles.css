@@ -50,6 +50,48 @@ button {
   padding: 16px 14px 96px;
 }
 
+.version-badge {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  width: 100%;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-bottom: 1px solid #d7dee8;
+  border-radius: 0;
+  background: rgba(248, 250, 252, 0.96);
+  color: #475569;
+  font-size: 12px;
+  font-weight: 900;
+  backdrop-filter: blur(12px);
+}
+
+.version-badge.updated {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.version-badge span {
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.version-badge.updated span {
+  background: #15803d;
+  color: #fff;
+}
+
+.version-badge strong,
+.version-badge small {
+  line-height: 1;
+}
+
 .top-panel,
 .summary-panel {
   color: #fff;

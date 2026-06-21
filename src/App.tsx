@@ -1,5 +1,6 @@
 import { BottomTabs } from './components/BottomTabs';
 import { Onboarding } from './components/Onboarding';
+import { VersionBadge } from './components/VersionBadge';
 import { useStudyApp } from './hooks/useStudyApp';
 import { PlanPage } from './pages/PlanPage';
 import { RecordsPage } from './pages/RecordsPage';
@@ -16,6 +17,8 @@ export function App() {
 
   return (
     <div className="app-shell">
+      <VersionBadge />
+
       {app.activeTab === 'today' ? (
         <TodayPage
           settings={app.settings}
