@@ -8,6 +8,7 @@ import { getAdaptiveDailyGoals } from '../utils/mastery';
 import { ActionButton } from '../components/ActionButton';
 import { StatCard } from '../components/StatCard';
 import { TaskCard } from '../components/TaskCard';
+import { WeeklyListenPanel } from '../components/WeeklyListenPanel';
 
 interface TodayPageProps {
   settings: Settings;
@@ -128,6 +129,8 @@ export function TodayPage({ settings, plan, today, todayMode, todayRecord, recor
           />
         </div>
       </section>
+
+      <WeeklyListenPanel plan={plan} settings={settings} records={records} today={today} />
 
       <section className="task-list">
         <div className="section-title-row">
