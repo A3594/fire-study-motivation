@@ -8,6 +8,12 @@ import { getAdaptiveDailyGoals } from '../utils/mastery';
 type TrackKind = 'objective' | 'subjective';
 type ListenMode = 'question' | 'qa';
 
+const TTS_RATE = 0.84;
+const TTS_CHUNK_PAUSE_MS = 700;
+const TTS_SHORT_PAUSE_MS = 500;
+const TTS_THINK_PAUSE_MS = 3500;
+const TTS_REPEAT_PAUSE_MS = 1000;
+
 interface ListeningCard {
   number: number;
   question: string;
@@ -203,23 +209,37 @@ export function WeeklyListenPanel({ plan, settings, records, today }: WeeklyList
     setCardIndex(safeIndex);
     indexRef.current = safeIndex;
 
-    await speakText(`문제 ${safeIndex + 1}. ${card.question}`, () => sessionRef.current === token);
+    await speakText(`문제입니다. ${safeIndex + 1}번 카드입니다.`, () => sessionRef.current === token);
+    if (sessionRef.current !== token) return;
+    await wait(TTS_SHORT_PAUSE_MS);
+    if (sessionRef.current !== token) return;
+    await speakText(card.question, () => sessionRef.current === token);
     if (sessionRef.current !== token) return;
 
     if (nextMode === 'qa') {
-      if (pauseEnabled) await wait(3000);
+      await wait(TTS_SHORT_PAUSE_MS);
       if (sessionRef.current !== token) return;
-      await speakText(`답. ${card.answer || '답안이 비어 있습니다.'}`, () => sessionRef.current === token);
+      await speakText('답을 떠올려 보세요.', () => sessionRef.current === token);
+      if (sessionRef.current !== token) return;
+      if (pauseEnabled) await wait(TTS_THINK_PAUSE_MS);
+      if (sessionRef.current !== token) return;
+      await speakText('정답입니다.', () => sessionRef.current === token);
+      if (sessionRef.current !== token) return;
+      await wait(TTS_SHORT_PAUSE_MS);
+      if (sessionRef.current !== token) return;
+      await speakText(card.answer || '답안이 비어 있습니다.', () => sessionRef.current === token);
       if (sessionRef.current !== token) return;
       if (card.mnemonic && card.mnemonic !== card.answer) {
-        await speakText(`핵심. ${card.mnemonic}`, () => sessionRef.current === token);
+        await wait(TTS_SHORT_PAUSE_MS);
+        if (sessionRef.current !== token) return;
+        await speakText(`핵심 암기문입니다. ${card.mnemonic}`, () => sessionRef.current === token);
       }
     }
 
     if (sessionRef.current !== token) return;
     if (repeatRef.current) {
       const next = (safeIndex + 1) % currentCards.length;
-      await wait(700);
+      await wait(TTS_REPEAT_PAUSE_MS);
       if (sessionRef.current === token) runSequence(token, nextMode, next);
       return;
     }
@@ -390,7 +410,7 @@ async function speakText(text: string, isActive: () => boolean = () => true) {
     if (!isActive()) return;
     await speakUtterance(chunks[index]);
     if (!isActive()) return;
-    if (index < chunks.length - 1) await wait(450);
+    if (index < chunks.length - 1) await wait(TTS_CHUNK_PAUSE_MS);
   }
 }
 
@@ -398,7 +418,7 @@ function speakUtterance(text: string) {
   return new Promise<void>((resolve) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ko-KR';
-    utterance.rate = 0.9;
+    utterance.rate = TTS_RATE;
     utterance.pitch = 1;
     utterance.onend = () => resolve();
     utterance.onerror = () => resolve();
