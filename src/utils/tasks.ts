@@ -1,6 +1,7 @@
 import {
   getObjectiveDocs,
   getObjectiveElectricDocs,
+  getObjectiveHydraulicsDocs,
   getObjectiveLawDocs,
   getObjectiveStructureDocs,
   getObjectiveTheoryDocs,
@@ -581,6 +582,7 @@ function selectObjectiveDocument(dayIndex: number): StudyDocument {
     getObjectiveStructureDocs(),
     getObjectiveTheoryDocs(),
     getObjectiveElectricDocs(),
+    getObjectiveHydraulicsDocs(),
   ];
   const track = dailyTracks[dayIndex % dailyTracks.length];
   const round = Math.floor(dayIndex / dailyTracks.length);

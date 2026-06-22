@@ -53,6 +53,15 @@ const CARD_COUNTS: Record<string, number> = {
   'obj-structure-leakage': 24,
   'obj-structure-exit-light': 44,
   'obj-structure-power': 18,
+  'obj-hydraulics-fluid-basics': 14,
+  'obj-hydraulics-unit-heat-conversion': 18,
+  'obj-hydraulics-pressure-conversion': 9,
+  'obj-hydraulics-viscosity': 16,
+  'obj-hydraulics-hydrostatics-suction-head': 8,
+  'obj-hydraulics-specific-gravity-density': 16,
+  'obj-hydraulics-pressure-energy-jet-force': 7,
+  'obj-hydraulics-flow-state-continuity': 19,
+  'obj-hydraulics-bernoulli-head': 13,
 };
 
 function doc(
@@ -165,6 +174,7 @@ export const PDF_GROUP_LINKS = [
   { label: '소방원론', group: '1차', url: './pdfs/groups/objective-theory.pdf' },
   { label: '소방전기', group: '1차', url: './pdfs/groups/objective-electric.pdf' },
   { label: '구조원리(소방전기)', group: '1차', url: './pdfs/groups/objective-structure-electric.pdf' },
+  { label: '소방수리학', group: '1차', url: './pdfs/groups/objective-hydraulics.pdf' },
 ] as const;
 
 export const SECONDARY_FIRE_DOCS: StudyDocument[] = [
@@ -236,11 +246,24 @@ export const OBJECTIVE_STRUCTURE_DOCS: StudyDocument[] = [
   doc('obj-structure-power', '비상전원 수전설비', '1차 객관식 구조원리', 'objective', 'objective-structure', '객관식___소방시설의 구조원리(소방전기)___소화활동설비(비상전원 수전설비).md'),
 ];
 
+export const OBJECTIVE_HYDRAULICS_DOCS: StudyDocument[] = [
+  doc('obj-hydraulics-fluid-basics', '유체의 성질과 기체기초', '1차 객관식 소방수리학', 'objective', 'objective-hydraulics', '소방시설관리사___소방수리학___01 유체의 성질과 기체기초.md', '높음'),
+  doc('obj-hydraulics-unit-heat-conversion', '단위와 열량환산', '1차 객관식 소방수리학', 'objective', 'objective-hydraulics', '소방시설관리사___소방수리학___02 단위와 열량환산.md'),
+  doc('obj-hydraulics-pressure-conversion', '압력환산과 압력의 종류', '1차 객관식 소방수리학', 'objective', 'objective-hydraulics', '소방시설관리사___소방수리학___03 압력환산과 압력의 종류.md'),
+  doc('obj-hydraulics-viscosity', '점성계수와 점도', '1차 객관식 소방수리학', 'objective', 'objective-hydraulics', '소방시설관리사___소방수리학___04 점성계수와 점도.md'),
+  doc('obj-hydraulics-hydrostatics-suction-head', '유체정역학과 흡입수두', '1차 객관식 소방수리학', 'objective', 'objective-hydraulics', '소방시설관리사___소방수리학___05 유체정역학과 흡입수두.md'),
+  doc('obj-hydraulics-specific-gravity-density', '비중과 밀도', '1차 객관식 소방수리학', 'objective', 'objective-hydraulics', '소방시설관리사___소방수리학___06 비중과 밀도.md'),
+  doc('obj-hydraulics-pressure-energy-jet-force', '압력에너지와 분류충격력', '1차 객관식 소방수리학', 'objective', 'objective-hydraulics', '소방시설관리사___소방수리학___07 압력에너지와 분류충격력.md'),
+  doc('obj-hydraulics-flow-state-continuity', '유동상태와 연속방정식', '1차 객관식 소방수리학', 'objective', 'objective-hydraulics', '소방시설관리사___소방수리학___08 유동상태와 연속방정식.md', '높음'),
+  doc('obj-hydraulics-bernoulli-head', '베르누이방정식과 수두', '1차 객관식 소방수리학', 'objective', 'objective-hydraulics', '소방시설관리사___소방수리학___09 베르누이방정식과 수두.md', '높음'),
+];
+
 export const OBJECTIVE_DOCS = [
   ...OBJECTIVE_LAW_DOCS,
   ...OBJECTIVE_THEORY_DOCS,
   ...OBJECTIVE_ELECTRIC_DOCS,
   ...OBJECTIVE_STRUCTURE_DOCS,
+  ...OBJECTIVE_HYDRAULICS_DOCS,
 ];
 
 export const SUBJECTIVE_DOCS = [
@@ -255,6 +278,7 @@ export function getCatalogSummary() {
   { label: '1차 객관식 소방원론', count: OBJECTIVE_THEORY_DOCS.length, cardCount: sumCards(OBJECTIVE_THEORY_DOCS) },
   { label: '1차 객관식 소방전기', count: OBJECTIVE_ELECTRIC_DOCS.length, cardCount: sumCards(OBJECTIVE_ELECTRIC_DOCS) },
   { label: '1차 객관식 구조원리', count: OBJECTIVE_STRUCTURE_DOCS.length, cardCount: sumCards(OBJECTIVE_STRUCTURE_DOCS) },
+  { label: '1차 객관식 소방수리학', count: OBJECTIVE_HYDRAULICS_DOCS.length, cardCount: sumCards(OBJECTIVE_HYDRAULICS_DOCS) },
   { label: '2차 화재안전기술기준', count: SECONDARY_FIRE_DOCS.length, cardCount: sumCards(SECONDARY_FIRE_DOCS) },
   { label: '2차 소방법 주관식', count: SECONDARY_LAW_DOCS.length, cardCount: sumCards(SECONDARY_LAW_DOCS) },
   { label: '2차 점검실무', count: SECONDARY_INSPECTION_DOCS.length, cardCount: sumCards(SECONDARY_INSPECTION_DOCS) },
@@ -281,6 +305,10 @@ export function getObjectiveStructureDocs(): StudyDocument[] {
   return mergeDynamicDocuments(OBJECTIVE_STRUCTURE_DOCS, 'objective-structure');
 }
 
+export function getObjectiveHydraulicsDocs(): StudyDocument[] {
+  return mergeDynamicDocuments(OBJECTIVE_HYDRAULICS_DOCS, 'objective-hydraulics');
+}
+
 export function getSecondaryFireDocs(): StudyDocument[] {
   return mergeDynamicDocuments(SECONDARY_FIRE_DOCS, 'secondary-fire');
 }
@@ -299,6 +327,7 @@ export function getObjectiveDocs(): StudyDocument[] {
     ...getObjectiveTheoryDocs(),
     ...getObjectiveElectricDocs(),
     ...getObjectiveStructureDocs(),
+    ...getObjectiveHydraulicsDocs(),
   ];
 }
 
@@ -315,6 +344,7 @@ export function getDynamicCatalogSummary() {
   const objectiveTheoryDocs = getObjectiveTheoryDocs();
   const objectiveElectricDocs = getObjectiveElectricDocs();
   const objectiveStructureDocs = getObjectiveStructureDocs();
+  const objectiveHydraulicsDocs = getObjectiveHydraulicsDocs();
   const secondaryFireDocs = getSecondaryFireDocs();
   const secondaryLawDocs = getSecondaryLawDocs();
   const secondaryInspectionDocs = getSecondaryInspectionDocs();
@@ -324,6 +354,7 @@ export function getDynamicCatalogSummary() {
     { label: '1차 객관식 소방원론', count: objectiveTheoryDocs.length, cardCount: sumCards(objectiveTheoryDocs) },
     { label: '1차 객관식 소방전기', count: objectiveElectricDocs.length, cardCount: sumCards(objectiveElectricDocs) },
     { label: '1차 객관식 구조원리', count: objectiveStructureDocs.length, cardCount: sumCards(objectiveStructureDocs) },
+    { label: '1차 객관식 소방수리학', count: objectiveHydraulicsDocs.length, cardCount: sumCards(objectiveHydraulicsDocs) },
     { label: '2차 화재안전기술기준', count: secondaryFireDocs.length, cardCount: sumCards(secondaryFireDocs) },
     { label: '2차 소방법 주관식', count: secondaryLawDocs.length, cardCount: sumCards(secondaryLawDocs) },
     { label: '2차 점검실무', count: secondaryInspectionDocs.length, cardCount: sumCards(secondaryInspectionDocs) },
@@ -362,6 +393,7 @@ function inferTrack(group: string, title: string): Pick<StudyDocument, 'examType
   if (/객관식/.test(text)) {
     if (/관계법|법규|법령|건축법|다중|초고층/.test(text)) return { examType: 'objective', track: 'objective-law' };
     if (/원론|연소|화재|폭발/.test(text)) return { examType: 'objective', track: 'objective-theory' };
+    if (/수리학|유체|수두|베르누이|유량|점성|비중|밀도/.test(text)) return { examType: 'objective', track: 'objective-hydraulics' };
     if (/전기|회로|자기|교류|직류|시퀀스/.test(text)) return { examType: 'objective', track: 'objective-electric' };
     return { examType: 'objective', track: 'objective-structure' };
   }

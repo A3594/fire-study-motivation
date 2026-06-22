@@ -34,7 +34,7 @@ export const PHASE_NOTES: Record<StudyPhase, string> = {
   '2차 빡공 단계': '답안 작성, 시간관리, 출력 훈련 중심',
 };
 
-export const OBJECTIVE_SUBJECTS = ['소방법규', '소방시설 구조원리', '소방원론', '소방전기'];
+export const OBJECTIVE_SUBJECTS = ['소방법규', '소방시설 구조원리', '소방원론', '소방전기', '소방수리학'];
 export const SUBJECTIVE_SUBJECTS = ['화재안전기준', '소방법', '점검실무행정', '구조원리'];
 export const CREATION_SUBJECTS = ['화재안전기준 카드', '소방법 카드', '객관식 오답 카드'];
 

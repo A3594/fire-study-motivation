@@ -143,7 +143,7 @@ export interface StudyDocument {
   title: string;
   group: string;
   examType: 'objective' | 'subjective';
-  track: 'objective-law' | 'objective-theory' | 'objective-electric' | 'objective-structure' | 'secondary-fire' | 'secondary-law' | 'secondary-inspection';
+  track: 'objective-law' | 'objective-theory' | 'objective-electric' | 'objective-structure' | 'objective-hydraulics' | 'secondary-fire' | 'secondary-law' | 'secondary-inspection';
   logseqFile: string;
   pdfUrl: string;
   ankiScope: string;

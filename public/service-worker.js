@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fire-study-motivation-pwa-v10';
+const CACHE_NAME = 'fire-study-motivation-pwa-v11';
 const APP_SHELL = [
   './manifest.webmanifest',
   './icons/icon.svg',
