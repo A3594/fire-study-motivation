@@ -53,15 +53,15 @@ const CARD_COUNTS: Record<string, number> = {
   'obj-structure-leakage': 24,
   'obj-structure-exit-light': 44,
   'obj-structure-power': 18,
-  'obj-hydraulics-fluid-basics': 14,
+  'obj-hydraulics-fluid-basics': 16,
   'obj-hydraulics-unit-heat-conversion': 18,
   'obj-hydraulics-pressure-conversion': 9,
   'obj-hydraulics-viscosity': 16,
-  'obj-hydraulics-hydrostatics-suction-head': 8,
+  'obj-hydraulics-hydrostatics-suction-head': 11,
   'obj-hydraulics-specific-gravity-density': 16,
   'obj-hydraulics-pressure-energy-jet-force': 7,
   'obj-hydraulics-flow-state-continuity': 19,
-  'obj-hydraulics-bernoulli-head': 13,
+  'obj-hydraulics-bernoulli-head': 28,
 };
 
 function doc(
